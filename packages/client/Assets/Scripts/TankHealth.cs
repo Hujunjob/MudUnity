@@ -19,6 +19,7 @@ public class TankHealth : MonoBehaviour
     public GameObject shell;
 
     // TODO: Get PlayerSync
+    private PlayerSync _player;
 
     private ParticleSystem m_ExplosionParticles;
     private bool m_Dead;
@@ -30,8 +31,11 @@ public class TankHealth : MonoBehaviour
         m_ExplosionParticles = Instantiate(m_ExplosionPrefab).GetComponent<ParticleSystem>();
         m_ExplosionParticles.gameObject.SetActive(false);
         // TODO: Get PlayerSync component
+        _player = GetComponent<PlayerSync>();
         // TODO: Subscribe to HealthTable Updates
+        ObservableExtensions.Subscribe(HealthTable.OnRecordUpdate().ObserveOnMainThread(),OnHealthChange).AddTo(_disposable);
         // TODO: Subscribe to HealthTable Deletions
+        ObservableExtensions.Subscribe(HealthTable.OnRecordDelete().ObserveOnMainThread(),OnPlayerDeath).AddTo(_disposable);
     }
 
 
@@ -44,14 +48,28 @@ public class TankHealth : MonoBehaviour
     }
 
     // TODO: Callback for HealthTable update
-    // private void OnHealthChange(HealthTableUpdate update)
-    // {
-    // }
+    private void OnHealthChange(HealthTableUpdate update)
+    {
+        if(update.Key!=_player.key){return;}
+
+        var shellPosition = transform.position;
+        shellPosition.y += 10;
+        Instantiate(shell,shellPosition,Quaternion.LookRotation(Vector3.down));
+
+        var health = update.TypedValue.Item1;
+        m_CurrentHealth = (float)health.value;
+        SetHealthUI();
+    }
 
     // TODO: Callback for HealthTable deletion
-    // private void OnPlayerDeath(HealthTableUpdate update)
-    // {
-    // }
+    private void OnPlayerDeath(HealthTableUpdate update)
+    {
+        if(update.Key!=_player.key){return;}
+
+        if(update.TypedValue.Item1==null){
+            OnDeath();
+        }
+    }
 
     private void SetHealthUI()
     {

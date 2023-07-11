@@ -27,6 +27,8 @@ public class TankShooting : MonoBehaviour
 		try
 		{
 			// TODO: Send tx from NetworkManager	
+			// await NetworkManager.Instance.
+			await NetworkManager.Instance.worldSend.TxExecute<AttackFunction>(x,y);
 		}
 		catch (Exception ex)
 		{
@@ -35,7 +37,7 @@ public class TankShooting : MonoBehaviour
 	}
 
 	// Update is called once per frame
-	void Update()
+	async void Update()
 	{
 		if (Input.GetKey(KeyCode.E))
 		{
@@ -58,6 +60,7 @@ public class TankShooting : MonoBehaviour
 			{
 				_fired = true;
 				// TODO: Send Tx
+				SendFireTxAsync((int)dest.x,(int)dest.z).Forget();
 				_fired = false;
 			}
 		}
